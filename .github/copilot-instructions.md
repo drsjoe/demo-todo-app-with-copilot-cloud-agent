@@ -19,6 +19,7 @@ This repository contains a Spring Boot web application written in Java 21 and bu
 - Name classes by their role, such as `TodoController`, `TodoService`, and `TodoRepository`.
 - Use descriptive names and avoid unexplained abbreviations.
 - Keep public APIs and method parameters typed explicitly; use immutable data where practical.
+- Prefer Java record classes over traditional DTO classes with getters and setters when immutability and data-carrying semantics are appropriate.
 
 ## Dependency injection
 
