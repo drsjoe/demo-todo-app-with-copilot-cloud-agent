@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -16,8 +17,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -38,7 +39,7 @@ class RegistrationControllerTest {
 
 	@Test
 	void showRegistrationForm_returnsRegisterView() throws Exception {
-		mockMvc.perform(get("/register"))
+		mockMvc.perform(get("/register").with(csrf()))
 				.andExpect(status().isOk())
 				.andExpect(view().name("register"))
 				.andExpect(model().attributeExists("registrationRequest"));
@@ -52,6 +53,7 @@ class RegistrationControllerTest {
 				.thenReturn(new UsernamePasswordAuthenticationToken("john.doe@example.com", "encoded", List.of()));
 
 		mockMvc.perform(post("/register")
+				.with(csrf())
 				.param("firstName", "John")
 				.param("lastName", "Doe")
 				.param("email", "john.doe@example.com")
@@ -67,6 +69,7 @@ class RegistrationControllerTest {
 	@Test
 	void registerUser_withMismatchedPasswords_returnsFormWithErrorAndDoesNotCreateAccount() throws Exception {
 		mockMvc.perform(post("/register")
+				.with(csrf())
 				.param("firstName", "John")
 				.param("lastName", "Doe")
 				.param("email", "john.doe@example.com")
@@ -88,6 +91,7 @@ class RegistrationControllerTest {
 				.thenThrow(new BadCredentialsException("Authentication failed"));
 
 		mockMvc.perform(post("/register")
+				.with(csrf())
 				.param("firstName", "John")
 				.param("lastName", "Doe")
 				.param("email", "john.doe@example.com")
@@ -103,6 +107,7 @@ class RegistrationControllerTest {
 	@Test
 	void registerUser_withMissingRequiredFields_returnsFormWithErrorAndDoesNotCreateAccount() throws Exception {
 		mockMvc.perform(post("/register")
+				.with(csrf())
 				.param("firstName", "")
 				.param("lastName", "")
 				.param("email", "not-an-email")
@@ -123,6 +128,7 @@ class RegistrationControllerTest {
 				.thenThrow(new EmailAlreadyExistsException("john.doe@example.com"));
 
 		mockMvc.perform(post("/register")
+				.with(csrf())
 				.param("firstName", "John")
 				.param("lastName", "Doe")
 				.param("email", "john.doe@example.com")
