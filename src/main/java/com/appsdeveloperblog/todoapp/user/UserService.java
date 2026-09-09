@@ -27,7 +27,10 @@ public class UserService {
 		try {
 			return userRepository.save(user);
 		} catch (DataIntegrityViolationException exception) {
-			throw new EmailAlreadyExistsException(registrationRequest.email());
+			if (userRepository.existsByEmail(registrationRequest.email())) {
+				throw new EmailAlreadyExistsException(registrationRequest.email());
+			}
+			throw exception;
 		}
 	}
 
