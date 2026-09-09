@@ -1,6 +1,7 @@
 package com.appsdeveloperblog.todoapp.user;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -11,13 +12,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(RegistrationController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class RegistrationControllerTest {
 
 	@Autowired
@@ -25,6 +32,9 @@ class RegistrationControllerTest {
 
 	@MockitoBean
 	private UserService userService;
+
+	@MockitoBean
+	private UserAuthenticationService userAuthenticationService;
 
 	@Test
 	void showRegistrationForm_returnsRegisterView() throws Exception {
@@ -35,9 +45,11 @@ class RegistrationControllerTest {
 	}
 
 	@Test
-	void registerUser_withValidData_createsAccountAndRedirects() throws Exception {
+	void registerUser_withValidData_createsAccountSignsInAndRedirects() throws Exception {
 		when(userService.registerUser(any(RegistrationRequest.class)))
 				.thenReturn(new User("John", "Doe", "john.doe@example.com", "encoded"));
+		when(userAuthenticationService.authenticateAndLogin(eq("john.doe@example.com"), eq("Secret123"), any(), any()))
+				.thenReturn(new UsernamePasswordAuthenticationToken("john.doe@example.com", "encoded", List.of()));
 
 		mockMvc.perform(post("/register")
 				.param("firstName", "John")
@@ -46,9 +58,10 @@ class RegistrationControllerTest {
 				.param("password", "Secret123")
 				.param("confirmPassword", "Secret123"))
 				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrl("/register?success"));
+				.andExpect(redirectedUrl("/tbd"));
 
 		verify(userService).registerUser(any(RegistrationRequest.class));
+		verify(userAuthenticationService).authenticateAndLogin(eq("john.doe@example.com"), eq("Secret123"), any(), any());
 	}
 
 	@Test
@@ -64,6 +77,27 @@ class RegistrationControllerTest {
 				.andExpect(model().attributeHasErrors("registrationRequest"));
 
 		verify(userService, never()).registerUser(any(RegistrationRequest.class));
+		verify(userAuthenticationService, never()).authenticateAndLogin(any(), any(), any(), any());
+	}
+
+	@Test
+	void registerUser_whenAutoLoginFails_redirectsToLogin() throws Exception {
+		when(userService.registerUser(any(RegistrationRequest.class)))
+				.thenReturn(new User("John", "Doe", "john.doe@example.com", "encoded"));
+		when(userAuthenticationService.authenticateAndLogin(eq("john.doe@example.com"), eq("Secret123"), any(), any()))
+				.thenThrow(new BadCredentialsException("Authentication failed"));
+
+		mockMvc.perform(post("/register")
+				.param("firstName", "John")
+				.param("lastName", "Doe")
+				.param("email", "john.doe@example.com")
+				.param("password", "Secret123")
+				.param("confirmPassword", "Secret123"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/login"));
+
+		verify(userService).registerUser(any(RegistrationRequest.class));
+		verify(userAuthenticationService).authenticateAndLogin(eq("john.doe@example.com"), eq("Secret123"), any(), any());
 	}
 
 	@Test
@@ -80,6 +114,7 @@ class RegistrationControllerTest {
 						"password"));
 
 		verify(userService, never()).registerUser(any(RegistrationRequest.class));
+		verify(userAuthenticationService, never()).authenticateAndLogin(any(), any(), any(), any());
 	}
 
 	@Test
@@ -96,6 +131,8 @@ class RegistrationControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(view().name("register"))
 				.andExpect(model().attributeHasFieldErrors("registrationRequest", "email"));
+
+		verify(userAuthenticationService, never()).authenticateAndLogin(any(), any(), any(), any());
 	}
 
 }
