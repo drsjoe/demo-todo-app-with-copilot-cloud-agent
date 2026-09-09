@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8" />
+	<title>TBD</title>
+</head>
+<body>
+	<h1>Temporary destination</h1>
+	<p>You are signed in as <span th:text="${email}">user@example.com</span>.</p>
+	<p>The post-login destination page will be built later.</p>
+	<form th:action="@{/logout}" method="post">
+		<button type="submit">Sign out</button>
+	</form>
+</body>
+</html>

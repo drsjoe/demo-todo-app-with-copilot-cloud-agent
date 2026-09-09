@@ -7,8 +7,6 @@
 <body>
 	<h1>Create an account</h1>
 
-	<p th:if="${registrationSuccess}">Your account has been created successfully.</p>
-
 	<form th:action="@{/register}" th:object="${registrationRequest}" method="post">
 		<div>
 			<label for="firstName">First name</label>
@@ -38,5 +36,7 @@
 		<span th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}">Global error</span>
 		<button type="submit">Register</button>
 	</form>
+
+	<p><a th:href="@{/login}">Already have an account? Sign in</a></p>
 </body>
 </html>
