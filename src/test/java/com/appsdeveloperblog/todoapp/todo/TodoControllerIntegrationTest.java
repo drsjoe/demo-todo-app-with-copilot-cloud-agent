@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
@@ -57,8 +56,7 @@ class TodoControllerIntegrationTest {
 	@Test
 	void getTodos_requiresAuthentication() throws Exception {
 		mockMvc.perform(get("/api/todos"))
-				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrl("/login"));
+				.andExpect(status().isUnauthorized());
 	}
 
 	@Test
