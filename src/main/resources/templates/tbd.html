@@ -9,6 +9,7 @@
 	<p>You are signed in as <span th:text="${email}">user@example.com</span>.</p>
 	<p>The post-login destination page will be built later.</p>
 	<form th:action="@{/logout}" method="post">
+		<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 		<button type="submit">Sign out</button>
 	</form>
 </body>
