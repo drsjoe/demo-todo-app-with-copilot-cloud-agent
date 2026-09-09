@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -43,12 +44,18 @@ public class RegistrationController {
 
 		try {
 			userService.registerUser(registrationRequest);
-			userAuthenticationService.authenticateAndLogin(registrationRequest.email(), registrationRequest.password(),
-					request, response);
 		}
 		catch (EmailAlreadyExistsException ex) {
 			bindingResult.addError(new FieldError(REGISTRATION_FORM_MODEL_ATTRIBUTE, "email", ex.getMessage()));
 			return REGISTRATION_VIEW;
+		}
+
+		try {
+			userAuthenticationService.authenticateAndLogin(registrationRequest.email(), registrationRequest.password(),
+					request, response);
+		}
+		catch (AuthenticationException ex) {
+			return "redirect:/login";
 		}
 
 		return "redirect:/tbd";

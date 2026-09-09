@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -77,6 +78,26 @@ class RegistrationControllerTest {
 
 		verify(userService, never()).registerUser(any(RegistrationRequest.class));
 		verify(userAuthenticationService, never()).authenticateAndLogin(any(), any(), any(), any());
+	}
+
+	@Test
+	void registerUser_whenAutoLoginFails_redirectsToLogin() throws Exception {
+		when(userService.registerUser(any(RegistrationRequest.class)))
+				.thenReturn(new User("John", "Doe", "john.doe@example.com", "encoded"));
+		when(userAuthenticationService.authenticateAndLogin(eq("john.doe@example.com"), eq("Secret123"), any(), any()))
+				.thenThrow(new BadCredentialsException("Authentication failed"));
+
+		mockMvc.perform(post("/register")
+				.param("firstName", "John")
+				.param("lastName", "Doe")
+				.param("email", "john.doe@example.com")
+				.param("password", "Secret123")
+				.param("confirmPassword", "Secret123"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/login"));
+
+		verify(userService).registerUser(any(RegistrationRequest.class));
+		verify(userAuthenticationService).authenticateAndLogin(eq("john.doe@example.com"), eq("Secret123"), any(), any());
 	}
 
 	@Test
