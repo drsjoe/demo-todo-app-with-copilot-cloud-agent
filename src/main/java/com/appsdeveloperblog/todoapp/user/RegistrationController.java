@@ -34,7 +34,7 @@ public class RegistrationController {
 
 	@PostMapping("/register")
 	public String registerUser(@Valid @ModelAttribute(REGISTRATION_FORM_MODEL_ATTRIBUTE) RegistrationRequest registrationRequest,
-			BindingResult bindingResult, Model model) {
+			BindingResult bindingResult) {
 		if (bindingResult.hasErrors()) {
 			return REGISTRATION_VIEW;
 		}
