@@ -60,7 +60,7 @@ class UserServiceTest {
 	void registerUser_throwsWhenDuplicateEmailDetectedDuringSave() {
 		RegistrationRequest request = new RegistrationRequest("John", "Doe", "john.doe@example.com", "Secret123",
 				"Secret123");
-		when(userRepository.existsByEmail(request.email())).thenReturn(false);
+		when(userRepository.existsByEmail(request.email())).thenReturn(false, true);
 		when(userRepository.save(any(User.class))).thenThrow(new DataIntegrityViolationException("duplicate email"));
 
 		assertThatThrownBy(() -> userService.registerUser(request)).isInstanceOf(EmailAlreadyExistsException.class);
