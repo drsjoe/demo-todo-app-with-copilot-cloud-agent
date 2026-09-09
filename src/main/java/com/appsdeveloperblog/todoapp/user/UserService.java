@@ -1,5 +1,6 @@
 package com.appsdeveloperblog.todoapp.user;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,11 @@ public class UserService {
 		User user = new User(registrationRequest.firstName(), registrationRequest.lastName(),
 				registrationRequest.email(), encodedPassword);
 
-		return userRepository.save(user);
+		try {
+			return userRepository.save(user);
+		} catch (DataIntegrityViolationException exception) {
+			throw new EmailAlreadyExistsException(registrationRequest.email());
+		}
 	}
 
 }

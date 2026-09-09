@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -51,6 +52,16 @@ class UserServiceTest {
 		RegistrationRequest request = new RegistrationRequest("John", "Doe", "john.doe@example.com", "Secret123",
 				"Secret123");
 		when(userRepository.existsByEmail(request.email())).thenReturn(true);
+
+		assertThatThrownBy(() -> userService.registerUser(request)).isInstanceOf(EmailAlreadyExistsException.class);
+	}
+
+	@Test
+	void registerUser_throwsWhenDuplicateEmailDetectedDuringSave() {
+		RegistrationRequest request = new RegistrationRequest("John", "Doe", "john.doe@example.com", "Secret123",
+				"Secret123");
+		when(userRepository.existsByEmail(request.email())).thenReturn(false);
+		when(userRepository.save(any(User.class))).thenThrow(new DataIntegrityViolationException("duplicate email"));
 
 		assertThatThrownBy(() -> userService.registerUser(request)).isInstanceOf(EmailAlreadyExistsException.class);
 	}
